@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 #
 # @file   update_kicad_symbols.py
-# @author David Weber <dweber@oxefit.com>
+# @author David Weber <david.weber.dfw@gmail.com>
 # @date   07/30/2024
 # 
 # @brief update_kicad_symbols module implementation
