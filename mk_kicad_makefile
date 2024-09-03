@@ -1,0 +1,68 @@
+#!/bin/bash
+#
+# @file   mk_kicad_makefile 
+# @author David Weber david.weber.dfw@gmail.com
+# @date   09/03/2024
+#
+# @brief create Makefile for a kicad project
+#
+# Copyright (C) 2024 David Weber
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+if [ $# -lt 1 ]; then
+  echo "Usage $0 <project name>"
+  exit -1
+fi
+
+printf "# This file was generated using mk_kicad_makefile bash script\n\n"
+
+echo "PROJ_NAME=${1}"
+cat <<'END_CAT' 
+
+OUTPUT_DIR=build
+all: $(OUTPUT_DIR) bom gerbers drills pcb_pdf sch_pdf zip
+
+
+$(OUTPUT_DIR):
+	@mkdir -p $(OUTPUT_DIR)
+
+bom: $(OUTPUT_DIR) 
+        kicad-cli sch export bom --fields 'Reference,Value,Footprint,Qty,DNP,Manufacturer,MPN' --output $(OUTPUT_DIR)/$(PROJ_NAME)_bom.csv --exclude-dnp --group-by "Value" $(PROJ_NAME).kicad_sch && cat $(OUTPUT_DIR)/$(PROJ_NAME)_bom.csv
+
+gerbers: $(OUTPUT_DIR)
+        kicad-cli pcb export gerbers --board-plot-params --output $(OUTPUT_DIR) $(PROJ_NAME).kicad_pcb
+
+pcb_pdf: $(OUTPUT_DIR)
+	kicad-cli pcb export pdf --layers F.Cu --output $(OUTPUT_DIR)/$(PROJ_NAME).pcb.front.pdf $(PROJ_NAME).kicad_pcb
+	kicad-cli pcb export pdf --layers B.Cu --output $(OUTPUT_DIR)/$(PROJ_NAME).pcb.back.pdf $(PROJ_NAME).kicad_pcb
+
+sch_pdf:
+	kicad-cli sch export pdf --output $(OUTPUT_DIR)/$(PROJ_NAME).sch.pdf $(PROJ_NAME).kicad_sch
+
+drills: $(OUTPUT_DIR)
+	kicad-cli pcb export drill --output $(OUTPUT_DIR)/ $(PROJ_NAME).kicad_pcb
+
+#step:  $(OUTPUT_DIR)
+#	kicad-cli pcb export step --output $(OUTOUT_DIR)/$(PROJ_NAME).step $(PROJ_NAME).kicad_pcb
+
+zip: $(OUTPUT_DIR) 
+	@echo "zipping files"
+	7z a $(OUTPUT_DIR)/$(PROJ_NAME).zip $(OUTPUT_DIR)/*.gbr $(OUTPUT_DIR)/*.drl
+
+clean:
+	rm -rf $(OUTPUT_DIR)
+
+.PHONY: all
+END_CAT
