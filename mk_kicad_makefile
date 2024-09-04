@@ -39,7 +39,8 @@ $(OUTPUT_DIR):
 	@mkdir -p $(OUTPUT_DIR)
 
 bom: $(OUTPUT_DIR) 
-	kicad-cli sch export bom --fields 'Reference,Value,Footprint,Qty,DNP,Manufacturer,MPN' --output $(OUTPUT_DIR)/$(PROJ_NAME)_bom.csv --exclude-dnp --group-by "Value" $(PROJ_NAME).kicad_sch && cat $(OUTPUT_DIR)/$(PROJ_NAME)_bom.csv
+	kicad-cli sch export bom --fields 'Reference,Value,Footprint,$${QUANTITY},$${DNP},Manufacturer,MPN' --output $(OUTPUT_DIR)/$(PROJ_NAME)_bom.csv --exclude-dnp --group-by Footprint,Value,MPN $(PROJ_NAME).kicad_sch
+	cat $(OUTPUT_DIR)/$(PROJ_NAME)_bom.csv
 
 gerbers: $(OUTPUT_DIR)
 	kicad-cli pcb export gerbers --board-plot-params --output $(OUTPUT_DIR) $(PROJ_NAME).kicad_pcb
