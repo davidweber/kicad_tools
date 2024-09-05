@@ -56,9 +56,9 @@ drills: $(OUTPUT_DIR)
 	kicad-cli pcb export drill --output $(OUTPUT_DIR)/ $(PROJ_NAME).kicad_pcb
 
 step:  $(OUTPUT_DIR)
-	kicad-cli pcb export step --output $(OUTOUT_DIR)/$(PROJ_NAME).step $(PROJ_NAME).kicad_pcb
+	kicad-cli pcb export step --force --drill-origin --no-unspecified --subst-models --output $(OUTPUT_DIR)/$(PROJ_NAME).step $(PROJ_NAME).kicad_pcb
 
-zip: $(OUTPUT_DIR) 
+zip: $(OUTPUT_DIR) gerbers drills
 	@echo "zipping files"
 	7z a $(OUTPUT_DIR)/$(PROJ_NAME).zip $(OUTPUT_DIR)/*.gbr $(OUTPUT_DIR)/*.drl
 
