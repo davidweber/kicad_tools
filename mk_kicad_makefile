@@ -31,7 +31,7 @@ printf "# This file was generated using mk_kicad_makefile bash script\n\n"
 echo "PROJ_NAME=${1}"
 cat <<'END_CAT' 
 
-OUTPUT_DIR=build
+OUTPUT_DIR=output
 all: $(OUTPUT_DIR) bom gerbers drills pcb_pdf sch_pdf zip
 
 
