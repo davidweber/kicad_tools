@@ -49,14 +49,14 @@ pcb_pdf: $(OUTPUT_DIR)
 	kicad-cli pcb export pdf --layers F.Cu --output $(OUTPUT_DIR)/$(PROJ_NAME).pcb.front.pdf $(PROJ_NAME).kicad_pcb
 	kicad-cli pcb export pdf --layers B.Cu --output $(OUTPUT_DIR)/$(PROJ_NAME).pcb.back.pdf $(PROJ_NAME).kicad_pcb
 
-sch_pdf:
+sch_pdf: $(OUTPUT_DIR)
 	kicad-cli sch export pdf --output $(OUTPUT_DIR)/$(PROJ_NAME).sch.pdf $(PROJ_NAME).kicad_sch
 
 drills: $(OUTPUT_DIR)
 	kicad-cli pcb export drill --output $(OUTPUT_DIR)/ $(PROJ_NAME).kicad_pcb
 
-#step:  $(OUTPUT_DIR)
-#	kicad-cli pcb export step --output $(OUTOUT_DIR)/$(PROJ_NAME).step $(PROJ_NAME).kicad_pcb
+step:  $(OUTPUT_DIR)
+	kicad-cli pcb export step --output $(OUTOUT_DIR)/$(PROJ_NAME).step $(PROJ_NAME).kicad_pcb
 
 zip: $(OUTPUT_DIR) 
 	@echo "zipping files"
