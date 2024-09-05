@@ -32,8 +32,7 @@ echo "PROJ_NAME=${1}"
 cat <<'END_CAT' 
 
 OUTPUT_DIR=output
-all: $(OUTPUT_DIR) bom gerbers drills pcb_pdf sch_pdf zip
-
+all: $(OUTPUT_DIR) bom gerbers drills step pcb_pdf sch_pdf zip
 
 $(OUTPUT_DIR):
 	@mkdir -p $(OUTPUT_DIR)
