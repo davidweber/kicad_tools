@@ -68,9 +68,9 @@ step:  $(OUTPUT_DIR)
 
 zip: $(OUTPUT_DIR) gerbers drills
 	@echo "zipping files"
-	7z a $(OUTPUT_DIR)/$(PROJ_NAME).zip $(OUTPUT_DIR)/*.gbr $(OUTPUT_DIR)/*.drl
+	7z a $(OUTPUT_DIR)/$(PROJ_NAME)_fab.zip $(OUTPUT_DIR)/*.gbr $(OUTPUT_DIR)/*.drl
 
-release: $(RELEASES_DIR) $(OUTPUT_DIR) #gerbers drills bom pcb_pdf sch_pdf step
+release: $(RELEASES_DIR) $(OUTPUT_DIR) gerbers drills bom pcb_pdf sch_pdf step zip
 	@echo Creating output tar file: $(OUTPUT_TAR_FILE)
 	@tar cvzf $(OUTPUT_TAR_FILE) $(OUTPUT_DIR)/* > /dev/null
 
