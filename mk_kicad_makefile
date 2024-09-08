@@ -32,10 +32,19 @@ echo "PROJ_NAME=${1}"
 cat <<'END_CAT' 
 
 OUTPUT_DIR=output
+RELEASES_DIR=releases
+GIT_BRANCH=`/usr/bin/git branch | /usr/bin/sed -e 's/* //g'`
+RELEASES_VER=$(PROJ_NAME)_$(GIT_BRANCH)
+COMMIT_HASH=`/usr/bin/git rev-parse --verify HEAD`
+OUTPUT_TAR_FILE=$(RELEASES_DIR)/$(RELEASES_VER).$(COMMIT_HASH).tar.gz
+
 all: $(OUTPUT_DIR) bom gerbers drills step pcb_pdf sch_pdf zip
 
 $(OUTPUT_DIR):
 	@mkdir -p $(OUTPUT_DIR)
+
+$(RELEASES_DIR):
+	@mkdir -p $(RELEASES_DIR)
 
 bom: $(OUTPUT_DIR) 
 	kicad-cli sch export bom --fields 'Reference,Value,Footprint,$${QUANTITY},$${DNP},Manufacturer,MPN' --output $(OUTPUT_DIR)/$(PROJ_NAME)_bom.csv --exclude-dnp --group-by Footprint,Value,MPN $(PROJ_NAME).kicad_sch
@@ -60,6 +69,10 @@ step:  $(OUTPUT_DIR)
 zip: $(OUTPUT_DIR) gerbers drills
 	@echo "zipping files"
 	7z a $(OUTPUT_DIR)/$(PROJ_NAME).zip $(OUTPUT_DIR)/*.gbr $(OUTPUT_DIR)/*.drl
+
+release: $(RELEASES_DIR) $(OUTPUT_DIR) #gerbers drills bom pcb_pdf sch_pdf step
+	@echo Creating output tar file: $(OUTPUT_TAR_FILE)
+	@tar cvzf $(OUTPUT_TAR_FILE) $(OUTPUT_DIR)/* > /dev/null
 
 clean:
 	rm -rf $(OUTPUT_DIR)
