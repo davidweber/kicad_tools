@@ -37,6 +37,7 @@ GIT_BRANCH=`/usr/bin/git branch | /usr/bin/sed -e 's/* //g'`
 RELEASES_VER=$(PROJ_NAME)_$(GIT_BRANCH)
 COMMIT_HASH=`/usr/bin/git rev-parse --verify HEAD`
 OUTPUT_TAR_FILE=$(RELEASES_DIR)/$(RELEASES_VER).$(COMMIT_HASH).tar.gz
+BOM_CSV_FILE=$(OUTPUT_DIR)/$(PROJ_NAME)_bom.csv
 
 all: $(OUTPUT_DIR) bom gerbers drills step pcb_pdf sch_pdf zip
 
@@ -47,8 +48,11 @@ $(RELEASES_DIR):
 	@mkdir -p $(RELEASES_DIR)
 
 bom: $(OUTPUT_DIR) 
-	kicad-cli sch export bom --fields 'Reference,Value,Footprint,$${QUANTITY},$${DNP},Manufacturer,MPN' --output $(OUTPUT_DIR)/$(PROJ_NAME)_bom.csv --exclude-dnp --group-by Footprint,Value,MPN $(PROJ_NAME).kicad_sch
-	cat $(OUTPUT_DIR)/$(PROJ_NAME)_bom.csv
+	kicad-cli sch export bom --fields 'Reference,Value,Footprint,$${QUANTITY},Manufacturer,MPN' --output $(BOM_CSV_FILE) --exclude-dnp --group-by Footprint,Value,MPN $(PROJ_NAME).kicad_sch
+#	csv2xls $(OUTPUT_DIR)/$(PROJ_NAME)_bom.csv -d "#" -o $(OUTPUT_DIR)/$(PROJ_NAME)_bom.xls
+#	kicad-cli sch export bom --fields 'Reference,Value,Footprint,$${QUANTITY},Manufacturer,MPN' --output $(OUTPUT_DIR)/$(PROJ_NAME)_bom.csv --exclude-dnp --group-by Footprint,Value,MPN $(PROJ_NAME).kicad_sch
+	cat $(BOM_CSV_FILE)
+	libreoffice --convert-to xlsx $(BOM_CSV_FILE) --outdir output --headless
 
 gerbers: $(OUTPUT_DIR)
 	kicad-cli pcb export gerbers --board-plot-params --output $(OUTPUT_DIR) $(PROJ_NAME).kicad_pcb
