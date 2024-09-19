@@ -57,6 +57,9 @@ bom: $(OUTPUT_DIR)
 gerbers: $(OUTPUT_DIR)
 	kicad-cli pcb export gerbers --board-plot-params --output $(OUTPUT_DIR) $(PROJ_NAME).kicad_pcb
 
+pos: $(OUTPUT_DIR)
+	kicad-cli pcb export pos --exclude-dnp --smd-only $(PROJ_NAME).kicad_pcb --output $(OUTPUT_DIR)/$(PROJ_NAME).smt.pos
+ 
 pcb_pdf: $(OUTPUT_DIR)
 	kicad-cli pcb export pdf --layers F.Cu --output $(OUTPUT_DIR)/$(PROJ_NAME).pcb.front.pdf $(PROJ_NAME).kicad_pcb
 	kicad-cli pcb export pdf --layers B.Cu --output $(OUTPUT_DIR)/$(PROJ_NAME).pcb.back.pdf $(PROJ_NAME).kicad_pcb
@@ -70,11 +73,11 @@ drills: $(OUTPUT_DIR)
 step:  $(OUTPUT_DIR)
 	kicad-cli pcb export step --force --drill-origin --no-unspecified --subst-models --output $(OUTPUT_DIR)/$(PROJ_NAME).step $(PROJ_NAME).kicad_pcb
 
-zip: $(OUTPUT_DIR) gerbers drills
+zip: $(OUTPUT_DIR) gerbers drills pos
 	@echo "zipping files"
-	7z a $(OUTPUT_DIR)/$(PROJ_NAME)_fab.zip $(OUTPUT_DIR)/*.gbr $(OUTPUT_DIR)/*.drl
+	7z a $(OUTPUT_DIR)/$(PROJ_NAME)_fab.zip $(OUTPUT_DIR)/*.gbr $(OUTPUT_DIR)/*.drl $(OUTPUT_DIR)/$(PROJ_NAME).smt.pos
 
-release: $(RELEASES_DIR) $(OUTPUT_DIR) gerbers drills bom pcb_pdf sch_pdf step zip
+release: $(RELEASES_DIR) $(OUTPUT_DIR) gerbers drills bom pcb_pdf sch_pdf step zip pos
 	@echo Creating output tar file: $(OUTPUT_TAR_FILE)
 	@tar cvzf $(OUTPUT_TAR_FILE) $(OUTPUT_DIR)/* > /dev/null
 
