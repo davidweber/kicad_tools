@@ -22,7 +22,8 @@
 #
 
 if [ $# -lt 1 ]; then
-  echo "Usage: $0 <symbol directory> [output kicad_sym file]"
+  BASENAME=`basename ${0}`
+  echo "Usage: ${BASENAME} <symbol directory> [output kicad_sym file]"
   exit -1
 fi
 
