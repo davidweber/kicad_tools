@@ -33,7 +33,7 @@ cat <<'END_CAT'
 
 OUTPUT_DIR=output
 RELEASES_DIR=releases
-GIT_BRANCH=`/usr/bin/git branch | /usr/bin/sed -e 's/* //g'`
+GIT_BRANCH=`/usr/bin/git branch --list 2> /dev/null | /usr/bin/sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/'`
 RELEASES_VER=$(PROJ_NAME)_$(GIT_BRANCH)
 COMMIT_HASH=`/usr/bin/git rev-parse --verify HEAD`
 OUTPUT_TAR_FILE=$(RELEASES_DIR)/$(RELEASES_VER).$(COMMIT_HASH).tar.gz
