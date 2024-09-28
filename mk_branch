@@ -1,0 +1,13 @@
+#!/bin/bash
+
+if [ $# -ne 1 ]; then
+  echo "Usage: $0 <new branch name>"
+  exit -1
+fi
+
+NEW_BRANCH=${1}
+
+git checkout -b ${NEW_BRANCH}
+read -p "Push new branch ${NEW_BRANCH} to remote repo? (Y/N): " confirm && [[ $confirm == [yY] || $confirm == [yY][eE][sS] ]] || exit -2
+#git push -u origin ${NEW_BRANCH}
+
