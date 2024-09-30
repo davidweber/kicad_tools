@@ -21,28 +21,32 @@
 # limitations under the License.
 #
 
-if [ $# -lt 1 ]; then
+if [ $# -lt 3 ]; then
   BASENAME=`basename ${0}`
-  echo "Usage: ${BASENAME} <symbol directory> [output kicad_sym file]"
+  echo "Usage: ${BASENAME} <symbol directory> <footprint directory> <output kicad_sym file>"
   exit -1
 fi
 
-if [ $# -eq 2 ]; then
-  OUTPUT_FILE="${2}"
+SYMBOL_DIR="${1}"
+FOOTPRINT_DIR=${2}
+OUTPUT_FILE="${3}"
+
+if [ ! -d "${SYMBOL_DIR}" ]; then
+  echo "${SYMBOL_DIR} is not a valid directory"
+  exit -1
+fi
+
+if [ -f "${OUTPUT_FILE}" ]; then
+  read -p "${OUTPUT_FILE} exists - Overwrite? (Y/N): " confirm && [[ $confirm == [yY] || $confirm == [yY][eE][sS] ]] || exit -2
+fi
+
+if [ ! -d "${FOOTPRINT_DIR}" ]; then
+  echo "${FOOTPRINT_DIR} is not a valid directory"
+  exit -1
 else
-  OUTPUT_FILE="my_symbols.kicad_sym"
-  if [ -f "${OUTPUT_FILE}" ]; then
-    read -p "${OUTPUT_FILE} exists - Overwrite? (Y/N): " confirm && [[ $confirm == [yY] || $confirm == [yY][eE][sS] ]] || exit -2
-  fi
+  FOOTPRINT_DIR=`echo ${FOOTPRINT_DIR} | rev | cut -f 2- -d '.' | rev`
 fi
 
-DIR="${1}"
-
-if [ ! -d "${DIR}" ]; then
-  echo "${DIR} is not a valid directory"
-  exit -1
-fi
-  
-update_kicad_symbols.py "${DIR}"
-replace_kicad_symbol_footprint_lib_name "${DIR}"/*.kicad_sym
-mk_kicad_symbol_lib.py "${DIR}" > "${OUTPUT_FILE}"
+update_kicad_symbols.py "${SYMBOL_DIR}"
+replace_kicad_symbol_footprint_lib_name ${FOOTPRINT_DIR} "${SYMBOL_DIR}"/*.kicad_sym
+mk_kicad_symbol_lib.py "${SYMBOL_DIR}" > "${OUTPUT_FILE}"

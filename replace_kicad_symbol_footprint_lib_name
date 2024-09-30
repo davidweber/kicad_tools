@@ -21,12 +21,17 @@
 # limitations under the License.
 #
 
-if [ $# -lt 1 ]; then
-  echo "Usage: $0 <file(s)/wildcard>"
-  echo $#
+if [ $# -lt 2 ]; then
+  BASENAME=`basename ${0}`
+  echo "Usage: ${BASENAME} <footprint lib name> <file(s)/wildcard>"
   exit -1
 else
-  sed -i 's/"Footprint" "[^:]*:/"Footprint" "my_footprints:/' "$@"
+  FOOTPRINT_LIB_NAME=${1}
+#  echo "Footprint Lib Name: " ${FOOTPRINT_LIB_NAME}
+#  CMD="sed 's/\"Footprint\" \"[^:]*:/\"Footprint\" \"${FOOTPRINT_LIB_NAME}:/' \"${@:2}\""
+#  echo ${CMD}
+#  sed ${CMD}
+  sed -i 's/"Footprint" "[^:]*:/"Footprint" "'"${FOOTPRINT_LIB_NAME}"':/' "${@:2}"
 fi
 
 
