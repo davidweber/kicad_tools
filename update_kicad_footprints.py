@@ -2,7 +2,7 @@
 #
 # @file   update_kicad_footprints.py
 # @author David Weber <david.weber.dfw@gmail.com>
-# @date   10/04/2024
+# @date   07/30/2024
 # 
 # @brief update_kicad_footprints module implementation
 # 
@@ -34,34 +34,40 @@ class Status(IntEnum):
 
 #-------------------------------------------------------------------------------
 
-def update_footprint_file(input_file, dir_name):
-  print(f"Processing footprint file: \"{input_file}\"", file=sys.stderr)
-  input_path = f"{dir_name}/{input_file}"
-  output_path =f"{dir_name}/new.{input_file}"
-  status, output = cmd_run(f"kicad-cli fp upgrade -o {output_path} {input_path}", False)
+def update_footprint_dir(subdir_name, dir_name):
+  print(f"Processing footprint dir: \"{subdir_name}\"", file=sys.stderr)
+  input_path = f"{dir_name}/{subdir_name}"
+  output_path =f"{dir_name}/new.{subdir_name}"
+  cmd=f"kicad-cli fp upgrade -o {output_path} {input_path}"
+  print(cmd)
+  status, output = cmd_run(f"{cmd}", False)
   if status == Status.SUCCESS:
     print(output)
-    if os.path.isfile(f"{output_path}"):
+    if os.path.isdir(f"{output_path}"):
       status, output = cmd_run(f"mv {input_path} {input_path}.original", False)
-      if os.path.isfile(f"{input_path}.original"):
+      if os.path.isdir(f"{input_path}.original"):
         if status == Status.SUCCESS:
+          cmd=f"mv {output_path} {input_path}"
+          print(cmd)
           status, output = cmd_run(f"mv {output_path} {input_path}", False)
+          if status == Status.SUCCESS:
+            print(output)
   return status
 
 #-------------------------------------------------------------------------------
 
-def process_footprint_files(dir_name):
+def process_footprint_subdirs(dir_name):
   all_output = ""
   n_files = 0
 
-  for filename in os.listdir(dir_name):
-    f = os.path.join(dir_name, filename)
-    if (os.path.isfile(f)):
-      file_parts = f.split(".")
-      n_parts = len(file_parts)
+  for subdir_name in os.listdir(dir_name):
+    subdir = os.path.join(dir_name, subdir_name)
+    if (os.path.isdir(subdir)):
+      dir_parts = subdir.split(".")
+      n_parts = len(dir_parts)
       if (n_parts > 0):
-        if (file_parts[n_parts - 1] == "kicad_mod"):
-          status = update_footprint_file(filename, dir_name)
+        if (dir_parts[n_parts - 1] == "pretty"):
+          status = update_footprint_dir(subdir_name, dir_name)
           if status == Status.SUCCESS:
             n_files += 1
 
@@ -121,13 +127,9 @@ def main(args):
       print(f"Error: footprint input directory \"{dir_name}\" does not exist", file=sys.stderr)
       exit
     else:
-      status = process_footprint_files(dir_name)
+      status = process_footprint_subdirs(dir_name)
       if (status != Status.SUCCESS):
         print(f"Error: unable to process footprint files", file=sys.stderr)
-      else:
-        status, output = cmd_run(f"ls {dir_name}/*.original", False)
-#        if status == Status.SUCCESS:
-#          print(f"Backup of original files created:\n {output}")
 
 #-------------------------------------------------------------------------------
 
