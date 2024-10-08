@@ -80,7 +80,7 @@ def process_symbol_files(dir_name):
         if (file_parts[n_parts - 1] == "kicad_sym"):
           status, output = extract_symbol_from_file(f)
           if (status == Status.FAILURE):
-            print("Error: failed to extract symbol from \"{filename}\"", file=sys.stderr)
+            print(f"Error: failed to extract symbol from \"{f}\"", file=sys.stderr)
           else:
             all_output += output
             n_files += 1
