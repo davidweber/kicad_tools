@@ -30,14 +30,14 @@ printf "# This file was generated using mk_kicad_makefile bash script\n\n"
 
 echo "PROJ_NAME=${1}"
 cat <<'END_CAT' 
-
-OUTPUT_DIR=output
-RELEASES_DIR=releases
-GIT_BRANCH=`/usr/bin/git branch --list 2> /dev/null | /usr/bin/sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/'`
+OUTPUT_DIR=../output
+FAB_DIR=$(OUTPUT_DIR)/FAB
+RELEASES_DIR=../releases
+GIT_BRANCH=`/usr/bin/git branch | /usr/bin/sed -e 's/* //g'`
 RELEASES_VER=$(PROJ_NAME)_$(GIT_BRANCH)
 COMMIT_HASH=`/usr/bin/git rev-parse --verify HEAD`
 OUTPUT_TAR_FILE=$(RELEASES_DIR)/$(RELEASES_VER).$(COMMIT_HASH).tar.gz
-BOM_CSV_FILE=$(OUTPUT_DIR)/$(PROJ_NAME)_bom.csv
+BOM_CSV_FILE=$(OUTPUT_DIR)/$(PROJ_NAME)-BOM.csv
 
 all: $(OUTPUT_DIR) bom gerbers drills step pcb_pdf sch_pdf zip
 
@@ -49,10 +49,10 @@ $(RELEASES_DIR):
 
 bom: $(OUTPUT_DIR) 
 	kicad-cli sch export bom --fields 'Reference,Value,Footprint,$${QUANTITY},Manufacturer,MPN' --output $(BOM_CSV_FILE) --exclude-dnp --group-by Footprint,Value,MPN $(PROJ_NAME).kicad_sch
-#	csv2xls $(OUTPUT_DIR)/$(PROJ_NAME)_bom.csv -d "#" -o $(OUTPUT_DIR)/$(PROJ_NAME)_bom.xls
-#	kicad-cli sch export bom --fields 'Reference,Value,Footprint,$${QUANTITY},Manufacturer,MPN' --output $(OUTPUT_DIR)/$(PROJ_NAME)_bom.csv --exclude-dnp --group-by Footprint,Value,MPN $(PROJ_NAME).kicad_sch
+#	csv2xls $(OUTPUT_DIR)/$(PROJ_NAME)-BOM.csv -d "#" -o $(OUTPUT_DIR)/$(PROJ_NAME)-BOM.xls
+#	kicad-cli sch export bom --fields 'Reference,Value,Footprint,$${QUANTITY},Manufacturer,MPN' --output $(OUTPUT_DIR)/$(PROJ_NAME)-BOM.csv --exclude-dnp --group-by Footprint,Value,MPN $(PROJ_NAME).kicad_sch
 	cat $(BOM_CSV_FILE)
-	libreoffice --convert-to xlsx $(BOM_CSV_FILE) --outdir output --headless
+	libreoffice --convert-to xlsx $(BOM_CSV_FILE) --outdir $(OUTPUT_DIR) --headless
 
 gerbers: $(OUTPUT_DIR)
 	kicad-cli pcb export gerbers --board-plot-params --output $(OUTPUT_DIR) $(PROJ_NAME).kicad_pcb
@@ -65,7 +65,7 @@ pcb_pdf: $(OUTPUT_DIR)
 	kicad-cli pcb export pdf --layers B.Cu --output $(OUTPUT_DIR)/$(PROJ_NAME).pcb.back.pdf $(PROJ_NAME).kicad_pcb
 
 sch_pdf: $(OUTPUT_DIR)
-	kicad-cli sch export pdf --output $(OUTPUT_DIR)/$(PROJ_NAME).sch.pdf $(PROJ_NAME).kicad_sch
+	kicad-cli sch export pdf --output $(OUTPUT_DIR)/$(PROJ_NAME)-SCH.pdf $(PROJ_NAME).kicad_sch
 
 drills: $(OUTPUT_DIR)
 	kicad-cli pcb export drill --output $(OUTPUT_DIR)/ $(PROJ_NAME).kicad_pcb
@@ -75,14 +75,15 @@ step:  $(OUTPUT_DIR)
 
 zip: $(OUTPUT_DIR) gerbers drills pos
 	@echo "zipping files"
-	7z a $(OUTPUT_DIR)/$(PROJ_NAME)_fab.zip $(OUTPUT_DIR)/*.gbr $(OUTPUT_DIR)/*.drl $(OUTPUT_DIR)/$(PROJ_NAME).smt.pos $(OUTPUT_DIR)/*.gbrjob
+	7z a $(FAB_DIR)/$(PROJ_NAME)-FAB.zip $(OUTPUT_DIR)/*.gbr $(OUTPUT_DIR)/*.drl $(OUTPUT_DIR)/$(PROJ_NAME).smt.pos $(OUTPUT_DIR)/*.gbrjob
+	tar cvzf $(FAB_DIR)/$(PROJ_NAME)-FAB.tar.gz $(OUTPUT_DIR)/*.gbr $(OUTPUT_DIR)/*.drl $(OUTPUT_DIR)/$(PROJ_NAME).smt.pos $(OUTPUT_DIR)/*.gbrjob
 
 release: $(RELEASES_DIR) $(OUTPUT_DIR) gerbers drills bom pcb_pdf sch_pdf step zip pos
 	@echo Creating output tar file: $(OUTPUT_TAR_FILE)
 	@tar cvzf $(OUTPUT_TAR_FILE) $(OUTPUT_DIR)/* > /dev/null
 
 clean:
-	rm -rf $(OUTPUT_DIR)
+	@rm -f $(OUTPUT_DIR)/*.*
+	@rm -f $(FAB_DIR)/*.*
 
 .PHONY: all
-END_CAT
