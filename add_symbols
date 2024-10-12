@@ -48,5 +48,5 @@ else
 fi
 
 update_kicad_symbols.py "${SYMBOL_DIR}"
-replace_kicad_symbol_footprint_lib_name ${FOOTPRINT_DIR} "${SYMBOL_DIR}"/*.kicad_sym
+replace_kicad_symbol_footprint_lib_name "${FOOTPRINT_DIR} ${SYMBOL_DIR}/*.kicad_sym"
 mk_kicad_symbol_lib.py "${SYMBOL_DIR}" > "${OUTPUT_FILE}"
