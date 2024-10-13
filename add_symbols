@@ -43,10 +43,11 @@ fi
 if [ ! -d "${FOOTPRINT_DIR}" ]; then
   echo "${FOOTPRINT_DIR} is not a valid directory"
   exit -1
-else
-  FOOTPRINT_DIR=`echo ${FOOTPRINT_DIR} | rev | cut -f 2- -d '.' | rev`
 fi
 
+FOOTPRINT_NAME=`basename "$FOOTPRINT_DIR" .pretty`
+
 update_kicad_symbols.py "${SYMBOL_DIR}"
-replace_kicad_symbol_footprint_lib_name "${FOOTPRINT_DIR} ${SYMBOL_DIR}/*.kicad_sym"
+replace_kicad_symbol_footprint_lib_name "${FOOTPRINT_NAME}" ${SYMBOL_DIR}/*.kicad_sym
 mk_kicad_symbol_lib.py "${SYMBOL_DIR}" > "${OUTPUT_FILE}"
+
