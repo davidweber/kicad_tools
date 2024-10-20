@@ -38,6 +38,7 @@ RELEASES_VER=$(PROJ_NAME)_$(GIT_BRANCH)
 COMMIT_HASH=`/usr/bin/git rev-parse --verify HEAD`
 OUTPUT_TAR_FILE=$(RELEASES_DIR)/$(RELEASES_VER).$(COMMIT_HASH).tar.gz
 BOM_CSV_FILE=$(OUTPUT_DIR)/$(PROJ_NAME)-BOM.csv
+BOM_XLSX_FILE=$(OUTPUT_DIR)/$(PROJ_NAME)-BOM.xlsx
 
 all: $(OUTPUT_DIR) bom gerbers drills step pcb_pdf sch_pdf zip
 
@@ -49,10 +50,8 @@ $(RELEASES_DIR):
 
 bom: $(OUTPUT_DIR) 
 	kicad-cli sch export bom --fields 'Reference,Value,Footprint,$${QUANTITY},Manufacturer,MPN' --output $(BOM_CSV_FILE) --exclude-dnp --group-by Footprint,Value,MPN $(PROJ_NAME).kicad_sch
-#	csv2xls $(OUTPUT_DIR)/$(PROJ_NAME)-BOM.csv -d "#" -o $(OUTPUT_DIR)/$(PROJ_NAME)-BOM.xls
-#	kicad-cli sch export bom --fields 'Reference,Value,Footprint,$${QUANTITY},Manufacturer,MPN' --output $(OUTPUT_DIR)/$(PROJ_NAME)-BOM.csv --exclude-dnp --group-by Footprint,Value,MPN $(PROJ_NAME).kicad_sch
 	cat $(BOM_CSV_FILE)
-	libreoffice --convert-to xlsx $(BOM_CSV_FILE) --outdir $(OUTPUT_DIR) --headless
+	ssconvert $(BOM_CSV_FILE) $(BOM_XLSX_FILE)
 
 gerbers: $(OUTPUT_DIR)
 	kicad-cli pcb export gerbers --board-plot-params --output $(OUTPUT_DIR) $(PROJ_NAME).kicad_pcb
@@ -73,10 +72,10 @@ drills: $(OUTPUT_DIR)
 step:  $(OUTPUT_DIR)
 	kicad-cli pcb export step --force --drill-origin --no-unspecified --subst-models --output $(OUTPUT_DIR)/$(PROJ_NAME).step $(PROJ_NAME).kicad_pcb
 
-zip: $(OUTPUT_DIR) gerbers drills pos
+zip: $(OUTPUT_DIR) gerbers drills pos bom
 	@echo "zipping files"
-	7z a $(FAB_DIR)/$(PROJ_NAME)-FAB.zip $(OUTPUT_DIR)/*.gbr $(OUTPUT_DIR)/*.drl $(OUTPUT_DIR)/$(PROJ_NAME).smt.pos $(OUTPUT_DIR)/*.gbrjob
-	tar cvzf $(FAB_DIR)/$(PROJ_NAME)-FAB.tar.gz $(OUTPUT_DIR)/*.gbr $(OUTPUT_DIR)/*.drl $(OUTPUT_DIR)/$(PROJ_NAME).smt.pos $(OUTPUT_DIR)/*.gbrjob
+	7z a $(FAB_DIR)/$(PROJ_NAME)-FAB.zip $(OUTPUT_DIR)/*.gbr $(OUTPUT_DIR)/*.drl $(OUTPUT_DIR)/$(PROJ_NAME).smt.pos $(OUTPUT_DIR)/*.gbrjob $(OUTPUT_DIR)/*BOM.*
+	tar cvzf $(FAB_DIR)/$(PROJ_NAME)-FAB.tar.gz $(OUTPUT_DIR)/*.gbr $(OUTPUT_DIR)/*.drl $(OUTPUT_DIR)/$(PROJ_NAME).smt.pos $(OUTPUT_DIR)/*.gbrjob $(OUTPUT_DIR)/*BOM.*
 
 release: $(RELEASES_DIR) $(OUTPUT_DIR) gerbers drills bom pcb_pdf sch_pdf step zip pos
 	@echo Creating output tar file: $(OUTPUT_TAR_FILE)
