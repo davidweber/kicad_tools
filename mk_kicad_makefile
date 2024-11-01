@@ -33,12 +33,20 @@ cat <<'END_CAT'
 OUTPUT_DIR=../output
 FAB_DIR=$(OUTPUT_DIR)/FAB
 RELEASES_DIR=../releases
-GIT_BRANCH=`/usr/bin/git branch | /usr/bin/sed -e 's/* //g'`
-RELEASES_VER=$(PROJ_NAME)_$(GIT_BRANCH)
-COMMIT_HASH=`/usr/bin/git rev-parse --verify HEAD`
-OUTPUT_TAR_FILE=$(RELEASES_DIR)/$(RELEASES_VER).$(COMMIT_HASH).tar.gz
-BOM_CSV_FILE=$(OUTPUT_DIR)/$(PROJ_NAME)-BOM.csv
-BOM_XLSX_FILE=$(OUTPUT_DIR)/$(PROJ_NAME)-BOM.xlsx
+GIT_BIN=$(shell which git)
+ifeq ($(GIT_BIN), /usr/bin/git)
+  GIT_BRANCH="$(shell git branch | grep '*' | sed -e 's/* //g')"
+  COMMIT_HASH=$(shell git rev-parse --short --verify HEAD)
+else
+  GIT_BRANCH="UNKNOWN_BRANCH"
+  COMMIT_HASH="UNKNOWN_COMMIT"
+endif
+RELEASES_VER="$(PROJ_NAME)-$(GIT_BRANCH)"
+BOM_CSV_FILE="$(OUTPUT_DIR)/$(RELEASES_VER)-$(COMMIT_HASH)-BOM.csv"
+BOM_XLSX_FILE="$(OUTPUT_DIR)/$(RELEASES_VER)-$(COMMIT_HASH)-BOM.xlsx"
+FAB_ZIP_FILE="$(FAB_DIR)/$(RELEASES_VER)-$(COMMIT_HASH)-FAB.zip"
+FAB_TAR_FILE="$(FAB_DIR)/$(RELEASES_VER)-$(COMMIT_HASH)-FAB.tar.gz"
+OUTPUT_TAR_FILE=$(RELEASES_DIR)/$(RELEASES_VER)-$(COMMIT_HASH).tar.gz
 
 all: $(OUTPUT_DIR) bom gerbers drills step pcb_pdf sch_pdf zip
 
@@ -47,6 +55,20 @@ $(OUTPUT_DIR):
 
 $(RELEASES_DIR):
 	@mkdir -p $(RELEASES_DIR)
+
+echo:
+	@echo GIT_BIN = $(GIT_BIN)
+	@echo PROJ_NAME = $(PROJ_NAME)
+	@echo OUTPUT_DIR = $(OUTPUT_DIR)
+	@echo FAB_DIR = $(FAB_DIR)
+	@echo GIT_BRANCH = $(GIT_BRANCH)
+	@echo COMMIT_HASH = $(COMMIT_HASH)
+	@echo RELEASES_VER = $(RELEASES_VER)
+	@echo FAB_ZIP_FILE = $(FAB_ZIP_FILE)
+	@echo FAB_TAR_FILE = $(FAB_TAR_FILE)
+	@echo OUTPUT_TAR_FILE = $(OUTPUT_TAR_FILE)
+	@echo BOM_CSV_FILE = $(BOM_CSV_FILE)
+	@echo BOM_XLSX_FILE = $(BOM_XLSX_FILE)
 
 bom: $(OUTPUT_DIR) 
 	kicad-cli sch export bom --fields 'Reference,Value,Footprint,$${QUANTITY},Manufacturer,MPN' --output $(BOM_CSV_FILE) --exclude-dnp --group-by Footprint,Value,MPN $(PROJ_NAME).kicad_sch
@@ -74,8 +96,8 @@ step:  $(OUTPUT_DIR)
 
 zip: $(OUTPUT_DIR) gerbers drills pos bom
 	@echo "zipping files"
-	7z a $(FAB_DIR)/$(PROJ_NAME)-FAB.zip $(OUTPUT_DIR)/*.gbr $(OUTPUT_DIR)/*.drl $(OUTPUT_DIR)/$(PROJ_NAME).smt.pos $(OUTPUT_DIR)/*.gbrjob $(OUTPUT_DIR)/*BOM.*
-	tar cvzf $(FAB_DIR)/$(PROJ_NAME)-FAB.tar.gz $(OUTPUT_DIR)/*.gbr $(OUTPUT_DIR)/*.drl $(OUTPUT_DIR)/$(PROJ_NAME).smt.pos $(OUTPUT_DIR)/*.gbrjob $(OUTPUT_DIR)/*BOM.*
+	7z a $(FAB_ZIP_FILE) $(OUTPUT_DIR)/*.gbr $(OUTPUT_DIR)/*.drl $(OUTPUT_DIR)/$(PROJ_NAME).smt.pos $(OUTPUT_DIR)/*.gbrjob $(OUTPUT_DIR)/*BOM.*
+	tar cvzf $(FAB_TAR_FILE) $(OUTPUT_DIR)/*.gbr $(OUTPUT_DIR)/*.drl $(OUTPUT_DIR)/$(PROJ_NAME).smt.pos $(OUTPUT_DIR)/*.gbrjob $(OUTPUT_DIR)/*BOM.*
 
 release: $(RELEASES_DIR) $(OUTPUT_DIR) gerbers drills bom pcb_pdf sch_pdf step zip pos
 	@echo Creating output tar file: $(OUTPUT_TAR_FILE)
