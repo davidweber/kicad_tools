@@ -41,14 +41,23 @@ else
   GIT_BRANCH="UNKNOWN_BRANCH"
   COMMIT_HASH="UNKNOWN_COMMIT"
 endif
+DATE_TIME="$(shell date +%Y%m%d)"
 RELEASES_VER="$(PROJ_NAME)-$(GIT_BRANCH)"
-BOM_CSV_FILE="$(OUTPUT_DIR)/$(RELEASES_VER)-$(COMMIT_HASH)-BOM.csv"
-BOM_XLSX_FILE="$(OUTPUT_DIR)/$(RELEASES_VER)-$(COMMIT_HASH)-BOM.xlsx"
-FAB_ZIP_FILE="$(FAB_DIR)/$(RELEASES_VER)-$(COMMIT_HASH)-FAB.zip"
-FAB_TAR_FILE="$(FAB_DIR)/$(RELEASES_VER)-$(COMMIT_HASH)-FAB.tar.gz"
-OUTPUT_TAR_FILE=$(RELEASES_DIR)/$(RELEASES_VER)-$(COMMIT_HASH).tar.gz
+BOM_CSV_FILE="$(OUTPUT_DIR)/$(RELEASES_VER)-$(DATE_TIME)-BOM.csv"
+BOM_XLSX_FILE="$(OUTPUT_DIR)/$(RELEASES_VER)-$(DATE_TIME)-BOM.xlsx"
+FAB_ZIP_FILE="$(FAB_DIR)/$(RELEASES_VER)-$(DATE_TIME)-FAB.zip"
+FAB_TAR_FILE="$(FAB_DIR)/$(RELEASES_VER)-$(DATE_TIME)-FAB.tar.gz"
+OUTPUT_TAR_FILE=$(RELEASES_DIR)/$(RELEASES_VER)-$(DATE_TIME).tar.gz
+POS_FILE_ASCII_IN=$(OUTPUT_DIR)/$(RELEASES_VER)-smt-pick-place-pos-in.txt
+POS_FILE_ASCII_MM=$(OUTPUT_DIR)/$(RELEASES_VER)-smt-pick-place-pos-mm.txt
+POS_FILE_CSV_IN=$(OUTPUT_DIR)/$(RELEASES_VER)-smt-pick-place-pos-in.csv
+POS_FILE_CSV_MM=$(OUTPUT_DIR)/$(RELEASES_VER)-smt-pick-place-pos-mm.csv
+PCB_DESIGN_FILE=$(PROJ_NAME).kicad_pcb
+SCH_DESIGN_FILE=$(PROJ_NAME).kicad_sch
+DESIGN_TAR_FILE="$(RELEASES_DIR)/$(RELEASES_VER)-$(DATE_TIME)-design.tar.gz"
+DESIGN_ZIP_FILE="$(RELEASES_DIR)/$(RELEASES_VER)-$(DATE_TIME)-design.zip"
 
-all: $(OUTPUT_DIR) bom gerbers drills step pcb_pdf sch_pdf zip
+all: $(OUTPUT_DIR) bom gerbers drills step pcb_pdf sch_pdf zip design_input_zip
 
 $(OUTPUT_DIR):
 	@mkdir -p $(OUTPUT_DIR)
@@ -57,55 +66,71 @@ $(RELEASES_DIR):
 	@mkdir -p $(RELEASES_DIR)
 
 echo:
-	@echo GIT_BIN = $(GIT_BIN)
-	@echo PROJ_NAME = $(PROJ_NAME)
-	@echo OUTPUT_DIR = $(OUTPUT_DIR)
-	@echo FAB_DIR = $(FAB_DIR)
-	@echo GIT_BRANCH = $(GIT_BRANCH)
-	@echo COMMIT_HASH = $(COMMIT_HASH)
-	@echo RELEASES_VER = $(RELEASES_VER)
-	@echo FAB_ZIP_FILE = $(FAB_ZIP_FILE)
-	@echo FAB_TAR_FILE = $(FAB_TAR_FILE)
-	@echo OUTPUT_TAR_FILE = $(OUTPUT_TAR_FILE)
-	@echo BOM_CSV_FILE = $(BOM_CSV_FILE)
-	@echo BOM_XLSX_FILE = $(BOM_XLSX_FILE)
+	@echo GIT_BIN           = $(GIT_BIN)
+	@echo PROJ_NAME         = $(PROJ_NAME)
+	@echo OUTPUT_DIR        = $(OUTPUT_DIR)
+	@echo FAB_DIR           = $(FAB_DIR)
+	@echo GIT_BRANCH        = $(GIT_BRANCH)
+	@echo COMMIT_HASH       = $(COMMIT_HASH)
+	@echo DATE_TIME         = $(DATE_TIME)
+	@echo RELEASES_VER      = $(RELEASES_VER)
+	@echo FAB_ZIP_FILE      = $(FAB_ZIP_FILE)
+	@echo FAB_TAR_FILE      = $(FAB_TAR_FILE)
+	@echo OUTPUT_TAR_FILE   = $(OUTPUT_TAR_FILE)
+	@echo BOM_CSV_FILE      = $(BOM_CSV_FILE)
+	@echo BOM_XLSX_FILE     = $(BOM_XLSX_FILE)
+	@echo POS_FILE_ASCII_IN = $(POS_FILE_ASCII_IN)
+	@echo POS_FILE_ASCII_MM = $(POS_FILE_ASCII_MM)
+	@echo POS_FILE_CSV_IN   = $(POS_FILE_CSV_IN)
+	@echo POS_FILE_CSV_MM   = $(POS_FILE_CSV_MM)
+	@echo PCB_DESIGN_FILE   = $(PCB_DESIGN_FILE)
+	@echo SCH_DESIGN_FILE   = $(SCH_DESIGN_FILE)
+
 
 bom: $(OUTPUT_DIR) 
-	kicad-cli sch export bom --fields 'Reference,Value,Footprint,$${QUANTITY},Manufacturer,MPN' --output $(BOM_CSV_FILE) --exclude-dnp --group-by Footprint,Value,MPN $(PROJ_NAME).kicad_sch
-	cat $(BOM_CSV_FILE)
+	kicad-cli sch export bom --fields 'Reference,Value,Footprint,$${QUANTITY},Manufacturer,MPN,Alternate PN' --output $(BOM_CSV_FILE) --exclude-dnp --group-by Footprint,Value,MPN $(SCH_DESIGN_FILE)
 	ssconvert $(BOM_CSV_FILE) $(BOM_XLSX_FILE)
 
 gerbers: $(OUTPUT_DIR)
-	kicad-cli pcb export gerbers --board-plot-params --output $(OUTPUT_DIR) $(PROJ_NAME).kicad_pcb
+	kicad-cli pcb export gerbers --board-plot-params --output $(OUTPUT_DIR) $(PCB_DESIGN_FILE)
 
 pos: $(OUTPUT_DIR)
-	kicad-cli pcb export pos --exclude-dnp --smd-only $(PROJ_NAME).kicad_pcb --output $(OUTPUT_DIR)/$(PROJ_NAME).smt.pos
+	kicad-cli pcb export pos --exclude-dnp --smd-only --format ascii --units in $(PCB_DESIGN_FILE) --output $(POS_FILE_ASCII_IN)
+	kicad-cli pcb export pos --exclude-dnp --smd-only --format ascii --units mm $(PCB_DESIGN_FILE) --output $(POS_FILE_ASCII_MM)
+	kicad-cli pcb export pos --exclude-dnp --smd-only --format csv --units in   $(PCB_DESIGN_FILE) --output $(POS_FILE_CSV_IN)
+	kicad-cli pcb export pos --exclude-dnp --smd-only --format csv --units mm   $(PCB_DESIGN_FILE) --output $(POS_FILE_CSV_MM)
  
 pcb_pdf: $(OUTPUT_DIR)
-	kicad-cli pcb export pdf --layers F.Cu --output $(OUTPUT_DIR)/$(PROJ_NAME).pcb.front.pdf $(PROJ_NAME).kicad_pcb
-	kicad-cli pcb export pdf --layers B.Cu --output $(OUTPUT_DIR)/$(PROJ_NAME).pcb.back.pdf $(PROJ_NAME).kicad_pcb
+	kicad-cli pcb export pdf --layers F.Cu --output $(OUTPUT_DIR)/$(PROJ_NAME).pcb.front.pdf $(PCB_DESIGN_FILE)
+	kicad-cli pcb export pdf --layers B.Cu --output $(OUTPUT_DIR)/$(PROJ_NAME).pcb.back.pdf $(PCB_DESIGN_FILE)
 
 sch_pdf: $(OUTPUT_DIR)
-	kicad-cli sch export pdf --output $(OUTPUT_DIR)/$(PROJ_NAME)-SCH.pdf $(PROJ_NAME).kicad_sch
+	kicad-cli sch export pdf --output $(OUTPUT_DIR)/$(PROJ_NAME)-SCH.pdf $(SCH_DESIGN_FILE)
 
 drills: $(OUTPUT_DIR)
-	kicad-cli pcb export drill --output $(OUTPUT_DIR)/ $(PROJ_NAME).kicad_pcb
+	kicad-cli pcb export drill --output $(OUTPUT_DIR)/ $(PCB_DESIGN_FILE)
 
 step:  $(OUTPUT_DIR)
-	kicad-cli pcb export step --force --drill-origin --no-unspecified --subst-models --output $(OUTPUT_DIR)/$(PROJ_NAME).step $(PROJ_NAME).kicad_pcb
+	kicad-cli pcb export step --force --drill-origin --no-unspecified --subst-models --output $(OUTPUT_DIR)/$(PROJ_NAME).step $(PCB_DESIGN_FILE)
 
 zip: $(OUTPUT_DIR) gerbers drills pos bom
 	@echo "zipping files"
-	7z a $(FAB_ZIP_FILE) $(OUTPUT_DIR)/*.gbr $(OUTPUT_DIR)/*.drl $(OUTPUT_DIR)/$(PROJ_NAME).smt.pos $(OUTPUT_DIR)/*.gbrjob $(OUTPUT_DIR)/*BOM.*
-	tar cvzf $(FAB_TAR_FILE) $(OUTPUT_DIR)/*.gbr $(OUTPUT_DIR)/*.drl $(OUTPUT_DIR)/$(PROJ_NAME).smt.pos $(OUTPUT_DIR)/*.gbrjob $(OUTPUT_DIR)/*BOM.*
+	7z a $(FAB_ZIP_FILE) $(OUTPUT_DIR)/*.gbr $(OUTPUT_DIR)/*.drl $(OUTPUT_DIR)/$(RELEASES_VER)-smt-* $(OUTPUT_DIR)/*.gbrjob $(OUTPUT_DIR)/*BOM.*
+	tar cvzf $(FAB_TAR_FILE) $(OUTPUT_DIR)/*.gbr $(OUTPUT_DIR)/*.drl $(OUTPUT_DIR)/$(RELEASES_VER)-smt-* $(OUTPUT_DIR)/*.gbrjob $(OUTPUT_DIR)/*BOM.*
 
-release: $(RELEASES_DIR) $(OUTPUT_DIR) gerbers drills bom pcb_pdf sch_pdf step zip pos
+design_input_zip:
+	7z a $(DESIGN_ZIP_FILE) $(PROJ_NAME).kicad_prl $(PROJ_NAME).kicad_pro $(PROJ_NAME).kicad_pcb $(PROJ_NAME)*.kicad_sch fp-lib-table sym-lib-table
+	tar cvzf $(DESIGN_TAR_FILE) $(PROJ_NAME).kicad_prl $(PROJ_NAME).kicad_pro $(PROJ_NAME).kicad_pcb $(PROJ_NAME)*.kicad_sch fp-lib-table sym-lib-table
+
+release: $(RELEASES_DIR) $(OUTPUT_DIR) gerbers drills bom pcb_pdf sch_pdf step zip pos design_input_zip
 	@echo Creating output tar file: $(OUTPUT_TAR_FILE)
 	@tar cvzf $(OUTPUT_TAR_FILE) $(OUTPUT_DIR)/* > /dev/null
+
 
 clean:
 	@rm -f $(OUTPUT_DIR)/*.*
 	@rm -f $(FAB_DIR)/*.*
+	@rm -f $(RELEASES_DIR)/*.*
 
 .PHONY: all
 END_CAT
