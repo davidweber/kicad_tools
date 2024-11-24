@@ -21,9 +21,9 @@
 # limitations under the License.
 #
 
-if [ $# -ne 4 ]; then
+if [ $# -ne 3 ]; then
   BASENAME=`basename ${0}`
-  echo "Usage: $BASENAME <part_number> <revision> <company_name> <output_dir>" > /dev/stderr
+  echo "Usage: $BASENAME <project dir> <project name> <company name>" > /dev/stderr
   exit 1
 fi
 
@@ -34,62 +34,53 @@ else
   echo "KICAD_PROJ_TEMPLATE_DIR=$KICAD_PROJ_TEMPLATE_DIR"
 fi
 
-PART_NUMBER=$1
-REVISION=$2
+PROJ_DIR=$1
+PROJ_NAME=$2
 COMPANY=$3
-PROJ_OUTPUT_DIR=$4
-PCB_PART_NUMBER="$PART_NUMBER"
-PCBA_PART_NUMBER="$PART_NUMBER"
-#PCB_DIR=$PROJ_OUTPUT_DIR/$PCB_PART_NUMBER
-PCB_DIR=$PROJ_OUTPUT_DIR
-#PCBA_DIR=$PROJ_OUTPUT_DIR/$PCBA_PART_NUMBER
-PCBA_DIR=$PCBA_PART_NUMBER
-PCB_REV="$PCB_PART_NUMBER"
-PCB_REV_DIR="$PCB_DIR/$PCB_REV-$REVISION/input"
-PCB_TEMPLATE_DIR="$PCB_DIR/$PCB_REV-$REVISION/input/template"
-#PCBA_REV="$PCBA_PART_NUMBER"
-#PCBA_REV_DIR="$PCBA_DIR/$PCBA_REV-$REVISION"
-OUTPUT_DIR="$PCB_DIR/$PCB_REV-$REVISION/output"
+INPUT_DIR="$PROJ_DIR/$PROJ_NAME/input"
+TEMPLATE_DIR="$INPUT_DIR/template"
+OUTPUT_DIR="$PROJ_DIR/$PROJ_NAME/output"
 FAB_DIR="$OUTPUT_DIR/FAB"
-PCBA_MANIFEST_FILE="$PCBA_REV_DIR/$PCBA_PART_NUMBER-manifest.txt"
 
-echo PART_NUMBER=$1
-echo REVISION=$2
-echo COMPANY=$3
-echo PROJ_OUTPUT_DIR=$4
-echo PCB_PART_NUMBER="$PART_NUMBER"
-echo PCB_DIR=$PROJ_OUTPUT_DIR
-echo PCB_REV="$PCB_PART_NUMBER"
-echo PCB_REV_DIR="$PCB_DIR/$PCB_REV-$REVISION/input"
-echo PCB_TEMPLATE_DIR="$PCB_DIR/$PCB_REV/input/template"
-echo OUTPUT_DIR="$PCB_DIR/$PCB_REV/output"
-echo FAB_DIR="$OUTPUT_DIR/FAB"
+echo PROJ_NAME=$1
+echo COMPANY=$2
+echo PROJ_DIR=$PROJ_DIR
+echo INPUT_DIR="$INPUT_DIR"
+echo TEMPLATE_DIR="$TEMPLATE_DIR"
+echo OUTPUT_DIR="$OUTPUT_DIR"
+echo FAB_DIR="$FAB_DIR"
 
-if [ ! -d "$PCB_DIR" ]; then
+if [ ! -d "$PROJ_DIR" ]; then
   echo "Creating new part number directory: $PCB_DIR"
-  mkdir -p ${PCB_DIR}
+  mkdir -p ${PROJ_DIR}
 else
-  echo "$PCB_DIR exists"
+  echo "Direcotry $PROJ_DIR exists"
 fi
 
-if [ -d "$PCB_REV_DIR" ]; then
-  echo "Error: Revision directory $PCB_REV_DIR exists, please enter unique revision!"
+if [ -d "$PROJ_DIR/$PROJ_NAME" ]; then
+  echo "Error: Project directory $PROJ_DIR/$PROJ_NAME exists!"
   exit 1
 else
-  mkdir -p $PCB_REV_DIR
+  mkdir -p $INPUT_DIR
+  mkdir -p $OUTPUT_DIR
   mkdir -p $FAB_DIR
 fi
 
-cp -R $KICAD_PROJ_TEMPLATE_DIR/* $PCB_REV_DIR
+
+cp -R $KICAD_PROJ_TEMPLATE_DIR/* $INPUT_DIR
+
 for suffix in .kicad_prl .kicad_pro .kicad_sch .kicad_pcb; do
-  echo "moving $PCB_TEMPLATE_DIR${suffix} $PCB_REV_DIR/${PCB_REV}${suffix}"
-  mv $PCB_TEMPLATE_DIR${suffix} $PCB_REV_DIR/${PCB_REV}${suffix}
+  echo "moving $TEMPLATE_DIR${suffix} $INPUT_DIR/${PROJ_NAME}${suffix}"
+  mv $TEMPLATE_DIR${suffix} $INPUT_DIR/${PROJ_NAME}${suffix}
 done
- 
+
+REVISION="1.0.0"
+
 DATE=`date +"%Y-%m-%d"`
-sed -i "s/REV_NUM/$REVISION/" $PCB_REV_DIR/$PCB_REV.*
-sed -i "s/DESIGN_TITLE/$PCB_PART_NUMBER/" $PCB_REV_DIR/$PCB_REV.*
-sed -i "s/DATE/$DATE/" $PCB_REV_DIR/$PCB_REV.*
-sed -i "s/COMPANY/$COMPANY/" $PCB_REV_DIR/$PCB_REV.*
+
+sed -i "s/REV_NUM/$REVISION/" $INPUT_DIR/$PROJ_NAME.*
+sed -i "s/DESIGN_TITLE/$PROJ_NAME/" $INPUT_DIR/$PROJ_NAME.*
+sed -i "s/DATE/$DATE/" $INPUT_DIR/$PROJ_NAME.*
+sed -i "s/COMPANY/$COMPANY/" $INPUT_DIR/$PROJ_NAME.*
  
-tree $PCB_REV_DIR
+tree $PROJ_DIR/$PROJ_NAME
