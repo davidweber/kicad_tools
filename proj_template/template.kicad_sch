@@ -3,7 +3,7 @@
 	(generator "eeschema")
 	(generator_version "8.0")
 	(uuid "5d80fb7d-ae13-4e08-ba61-7e26fe6662ad")
-	(paper "B")
+	(paper "C")
 	(title_block
 		(title "DESIGN_TITLE")
 		(date "DATE")
