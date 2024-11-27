@@ -1,4 +1,5 @@
 (fp_lib_table
   (version 7)
   (lib (name "my_footprints")(type "KiCad")(uri "${KICAD_MY_LIB_DIR}/my_footprints.pretty")(options "")(descr ""))
+  (lib (name "digikey-footprints")(type "KiCad")(uri "${KICAD_DIGIKEY_LIB_DIR}/digikey-footprints.pretty")(options "")(descr ""))
 )
