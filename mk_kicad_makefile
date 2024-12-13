@@ -54,8 +54,8 @@ POS_FILE_CSV_IN=$(OUTPUT_DIR)/$(RELEASES_VER)-smt-pick-place-pos-in.csv
 POS_FILE_CSV_MM=$(OUTPUT_DIR)/$(RELEASES_VER)-smt-pick-place-pos-mm.csv
 PCB_DESIGN_FILE=$(PROJ_NAME).kicad_pcb
 SCH_DESIGN_FILE=$(PROJ_NAME).kicad_sch
-DESIGN_TAR_FILE="$(RELEASES_DIR)/$(RELEASES_VER)-$(DATE_TIME)-design.tar.gz"
-DESIGN_ZIP_FILE="$(RELEASES_DIR)/$(RELEASES_VER)-$(DATE_TIME)-design.zip"
+DESIGN_TAR_FILE="$(OUTPUT_DIR)/$(RELEASES_VER)-$(DATE_TIME)-design.tar.gz"
+DESIGN_ZIP_FILE="$(OUTPUT_DIR)/$(RELEASES_VER)-$(DATE_TIME)-design.zip"
 
 all: $(OUTPUT_DIR) bom gerbers drills step pcb_pdf sch_pdf zip design_input_zip
 
