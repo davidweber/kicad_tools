@@ -54,6 +54,7 @@ POS_FILE_CSV_IN=$(OUTPUT_DIR)/$(RELEASES_VER)-smt-pick-place-pos-in.csv
 POS_FILE_CSV_MM=$(OUTPUT_DIR)/$(RELEASES_VER)-smt-pick-place-pos-mm.csv
 PCB_DESIGN_FILE=$(PROJ_NAME).kicad_pcb
 SCH_DESIGN_FILE=$(PROJ_NAME).kicad_sch
+SCH_PDF_FILE="$(OUTPUT_DIR)/$(RELEASES_VER)-$(DATE_TIME)-SCH.pdf"
 DESIGN_TAR_FILE="$(OUTPUT_DIR)/$(RELEASES_VER)-$(DATE_TIME)-design.tar.gz"
 DESIGN_ZIP_FILE="$(OUTPUT_DIR)/$(RELEASES_VER)-$(DATE_TIME)-design.zip"
 
@@ -85,6 +86,7 @@ echo:
 	@echo POS_FILE_CSV_MM   = $(POS_FILE_CSV_MM)
 	@echo PCB_DESIGN_FILE   = $(PCB_DESIGN_FILE)
 	@echo SCH_DESIGN_FILE   = $(SCH_DESIGN_FILE)
+	@echo SCH_PDF_FIILE     = $(SCH_PDF_FILE)
 
 
 bom: $(OUTPUT_DIR) 
@@ -105,7 +107,9 @@ pcb_pdf: $(OUTPUT_DIR)
 	kicad-cli pcb export pdf --layers B.Cu --output $(OUTPUT_DIR)/$(PROJ_NAME).pcb.back.pdf $(PCB_DESIGN_FILE)
 
 sch_pdf: $(OUTPUT_DIR)
-	kicad-cli sch export pdf --output $(OUTPUT_DIR)/$(PROJ_NAME)-SCH.pdf $(SCH_DESIGN_FILE)
+	kicad-cli sch export pdf --output $(SCH_PDF_FILE) $(SCH_DESIGN_FILE)
+#	kicad-cli sch export pdf --output $(OUTPUT_DIR)/$(PROJ_NAME)-SCH.pdf $(SCH_DESIGN_FILE)
+#	find -name "*.kicad_sch" -exec kicad-cli sch export pdf --output $(OUTPUT_DIR)/{}-SCH.pdf {} \;
 
 drills: $(OUTPUT_DIR)
 	kicad-cli pcb export drill --output $(OUTPUT_DIR)/ $(PCB_DESIGN_FILE)
