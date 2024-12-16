@@ -49,10 +49,13 @@ if [ ! -d "$PCB_DIR" ]; then
   if [ $? -eq 0 ]; then
     git clone git@github.com:davidweber/${PCB_PART_NUMBER}
     mkdir -p ${INPUT_DIR}
+  else
+    echo "repo ${PCB_PART_NUMBER} does not exist"
+    exit -1
   fi
 else
   echo "${PCB_DIR} exists"
-  exit -1
+  exit -2
 fi
 
 cp -R ${KICAD_PROJ_TEMPLATE_DIR}/* ${INPUT_DIR}
