@@ -21,61 +21,52 @@
 # limitations under the License.
 #
 
-if [ $# -ne 4 ]; then
+if [ $# -ne 3 ]; then
   BASENAME=`basename ${0}`
-  echo "Usage: $BASENAME <part_number> <revision> <company_name> <output_dir>" > /dev/stderr
+  echo "Usage: $BASENAME <part_number> <revision> <company_name>" > /dev/stderr
   exit 1
 fi
 
-#if [ ! -f "$KICAD_PROJ_TEMPLATE_DIR" ]; then
-#  echo "KICAD_PROJ_TEMPLATE_DIR environment variable is not set.  It should point to the directory containing kicad project template files"
-#  exit 2
-#fi
+if [ ! -d "$KICAD_PROJ_TEMPLATE_DIR" ]; then
+  echo "KICAD_PROJ_TEMPLATE_DIR environment variable is not set.  It should point to the directory containing kicad project template files"
+  exit 2
+fi
 
 PART_NUMBER=$1
+PCB_REV="$2"
 COMPANY=$3
-PROJ_OUTPUT_DIR=$4
-PCB_PART_NUMBER="PCB-$PART_NUMBER"
-PCBA_PART_NUMBER="PCBA-$PART_NUMBER"
-PCB_DIR=$PROJ_OUTPUT_DIR/$PCB_PART_NUMBER
-PCBA_DIR=$PROJ_OUTPUT_DIR/$PCBA_PART_NUMBER
-PCB_REV="$PCB_PART_NUMBER-$2"
-PCB_REV_DIR="$PCB_DIR/$PCB_REV/input"
-PCB_TEMPLATE_DIR="$PCB_DIR/$PCB_REV/input/template"
-PCBA_REV="$PCBA_PART_NUMBER-$2"
-PCBA_REV_DIR="$PCBA_DIR/$PCBA_REV"
-OUTPUT_DIR="$PCB_DIR/$PCB_REV/output"
+PCB_PART_NUMBER="$PART_NUMBER"
+PCB_DIR=$PCB_PART_NUMBER
+INPUT_DIR=$PCB_DIR/input
+MAKEFILE=$INPUT_DIR/Makefile
+PCB_TEMPLATE_DIR="$INPUT_DIR/template"
+OUTPUT_DIR="$PCB_DIR/output"
 FAB_DIR="$OUTPUT_DIR/FAB"
-PCBA_MANIFEST_FILE="$PCBA_REV_DIR/manifest.txt"
 
 if [ ! -d "$PCB_DIR" ]; then
   echo "Creating new part number directory: $PCB_DIR"
-  mkdir -p ${PCB_DIR}
+  git ls-remote git@github.com:davidweber/${PCB_PART_NUMBER}
+  if [ $? -eq 0 ]; then
+    git clone git@github.com:davidweber/${PCB_PART_NUMBER}
+    mkdir -p ${INPUT_DIR}
+  fi
 else
-  echo "$PCB_DIR exists"
+  echo "${PCB_DIR} exists"
+  exit -1
 fi
 
-if [ -d "$PCB_REV_DIR" ]; then
-  echo "Error: Revision directory $PCB_REV_DIR exists, please enter unique revision!"
-  exit 1
-else
-  mkdir -p $PCB_REV_DIR
-  mkdir -p $FAB_DIR
-  mkdir -p $PCBA_REV_DIR
-  echo $'PCB=\nPCBS=\nPCBB=\nPCBF=' > $PCBA_MANIFEST_FILE
-fi
-
-cp -R proj_template/* $PCB_REV_DIR
+cp -R ${KICAD_PROJ_TEMPLATE_DIR}/* ${INPUT_DIR}
 for suffix in .kicad_prl .kicad_pro .kicad_sch .kicad_pcb; do
-  echo "moving $PCB_TEMPLATE_DIR${suffix} $PCB_REV_DIR/${PCB_REV}${suffix}"
-  mv $PCB_TEMPLATE_DIR${suffix} $PCB_REV_DIR/${PCB_REV}${suffix}
+  echo "moving $PCB_TEMPLATE_DIR${suffix} $INPUT_DIR/$PCB_PART_NUMBER${suffix}"
+  mv $PCB_TEMPLATE_DIR${suffix} $INPUT_DIR/$PCB_PART_NUMBER${suffix}
 done
  
 DATE=`date +"%Y-%m-%d"`
-sed -i "s/REV_NUM/$PCB_REV/" $PCB_REV_DIR/$PCB_REV.*
-sed -i "s/DESIGN_TITLE/$PCB_PART_NUMBER/" $PCB_REV_DIR/$PCB_REV.*
-sed -i "s/DATE/$DATE/" $PCB_REV_DIR/$PCB_REV.*
-sed -i "s/COMPANY/$COMPANY/" $PCB_REV_DIR/$PCB_REV.*
+sed -i "s/REV_NUM/$PCB_REV/" $INPUT_DIR/$PCB_DIR.*
+sed -i "s/DESIGN_TITLE/$PCB_PART_NUMBER/" $INPUT_DIR/$PCB_DIR.*
+sed -i "s/DATE/$DATE/" $INPUT_DIR/$PCB_DIR.*
+sed -i "s/COMPANY/$COMPANY/" $INPUT_DIR/$PCB_DIR.*
+
+mk_kicad_makefile $PCB_PART_NUMBER > $MAKEFILE
  
 tree $PCB_DIR
-tree $PCBA_DIR
