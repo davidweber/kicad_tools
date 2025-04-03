@@ -134,8 +134,8 @@ pcba zip: $(OUTPUT_DIR) $(PCBA_DIR) gerbers drills pos bom
 	@tar cvzf $(FAB_TAR_FILE) $(PCB_DIR)/* $(PCBA_DIR)/*
 
 design_input_zip:
-	@7z a $(DESIGN_ZIP_FILE) $(PROJ_NAME).kicad_prl $(PROJ_NAME).kicad_pro $(PROJ_NAME).kicad_pcb $(PROJ_NAME)*.kicad_sch fp-lib-table sym-lib-table
-	@tar cvzf $(DESIGN_TAR_FILE) $(PROJ_NAME).kicad_prl $(PROJ_NAME).kicad_pro $(PROJ_NAME).kicad_pcb $(PROJ_NAME)*.kicad_sch fp-lib-table sym-lib-table
+	@7z a $(DESIGN_ZIP_FILE) $(PROJ_NAME).kicad_prl $(PROJ_NAME).kicad_pro $(PROJ_NAME).kicad_pcb $(PROJ_NAME)*.kicad_sch fp-lib-table sym-lib-table Makefile *.ioc
+	@tar cvzf $(DESIGN_TAR_FILE) $(PROJ_NAME).kicad_prl $(PROJ_NAME).kicad_pro $(PROJ_NAME).kicad_pcb $(PROJ_NAME)*.kicad_sch fp-lib-table sym-lib-table Makefile *.ioc
 
 release: $(RELEASES_DIR) $(OUTPUT_DIR) gerbers drills bom pcb_pdf sch_pdf step zip pos design_input_zip
 	@echo Creating output tar file: $(OUTPUT_TAR_FILE)
