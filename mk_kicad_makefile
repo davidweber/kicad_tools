@@ -26,8 +26,9 @@ if [ $# -lt 1 ]; then
   exit -1
 fi
 
-printf "# This file was generated using mk_kicad_makefile bash script\n\n"
-
+TODAY=`date`
+printf "# This file was generated using mk_kicad_makefile bash script\n"
+printf "# ${TODAY}\n\n"
 echo "PCB_NAME=${1}"
 cat <<'END_CAT'
 PROJ_NAME=PCB-$(PCB_NAME)
@@ -53,8 +54,8 @@ BOM_CSV_FILE="$(PCBA_DIR)/$(PCB_VER)-BOM.csv"
 BOM_XLSX_FILE="$(PCBA_DIR)/$(PCB_VER)-BOM.xlsx"
 FAB_ZIP_FILE="$(FAB_DIR)/$(PCBA_VER)-$(DATE_TIME)-FAB.zip"
 FAB_TAR_FILE="$(FAB_DIR)/$(PCBA_VER)-$(DATE_TIME)-FAB.tar.gz"
-OUTPUT_TAR_FILE=$(RELEASES_DIR)/$(PCBA_VER)-$(DATE_TIME).tar.gz
-OUTPUT_ZIP_FILE=$(RELEASES_DIR)/$(PCBA_VER)-$(DATE_TIME).zip
+OUTPUT_TAR_FILE=$(RELEASES_DIR)/$(PCB_VER)-$(DATE_TIME)-ALL.tar.gz
+OUTPUT_ZIP_FILE=$(RELEASES_DIR)/$(PCB_VER)-$(DATE_TIME)-ALL.zip
 POS_FILE_ASCII_IN=$(PCBA_DIR)/$(PCB_VER)-smt-pick-place-pos-in.txt
 POS_FILE_ASCII_MM=$(PCBA_DIR)/$(PCB_VER)-smt-pick-place-pos-mm.txt
 POS_FILE_CSV_IN=$(PCBA_DIR)/$(PCB_VER)-smt-pick-place-pos-in.csv
