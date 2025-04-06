@@ -104,7 +104,7 @@ echo:
 
 
 bom: $(OUTPUT_DIR) $(PCBA_DIR)
-	kicad-cli sch export bom --fields 'Reference,Value,Footprint,$${QUANTITY},Manufacturer,MPN,Alternate PN' --output $(BOM_CSV_FILE) --exclude-dnp --group-by Footprint,Value,MPN $(SCH_DESIGN_FILE)
+	kicad-cli sch export bom --fields 'Reference,$${QUANTITY},MPN,Manufacturer,Footprint,Value,Alternate PN' --output $(BOM_CSV_FILE) --exclude-dnp --group-by Footprint,Value,MPN $(SCH_DESIGN_FILE)
 	ssconvert $(BOM_CSV_FILE) $(BOM_XLSX_FILE)
 
 gerbers: $(OUTPUT_DIR) $(PCB_DIR)
