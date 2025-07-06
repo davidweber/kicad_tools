@@ -27,9 +27,11 @@ if [ $# -ne 3 ]; then
   exit 1
 fi
 
-if [ ! -d "$KICAD_PROJ_TEMPLATE_DIR" ]; then
+if [ ! -n "$KICAD_PROJ_TEMPLATE_DIR" ]; then
   echo "KICAD_PROJ_TEMPLATE_DIR environment variable is not set.  It should point to the directory containing kicad project template files"
   exit 2
+else
+  echo "KICAD_PROJ_TEMPLATE_DIR=$KICAD_PROJ_TEMPLATE_DIR"
 fi
 
 PART_NUMBER=$1
@@ -40,8 +42,6 @@ PCB_DIR=$PCB_PART_NUMBER
 INPUT_DIR=$PCB_DIR/input
 MAKEFILE=$INPUT_DIR/Makefile
 PCB_TEMPLATE_DIR="$INPUT_DIR/template"
-OUTPUT_DIR="$PCB_DIR/output"
-FAB_DIR="$OUTPUT_DIR/FAB"
 
 if [ ! -d "$PCB_DIR" ]; then
   echo "Creating new part number directory: $PCB_DIR"
@@ -51,7 +51,8 @@ if [ ! -d "$PCB_DIR" ]; then
     mkdir -p ${INPUT_DIR}
   else
     echo "repo ${PCB_PART_NUMBER} does not exist"
-    exit -1
+    mkdir -p ${INPUT_DIR}
+#    exit -1
   fi
 else
   echo "${PCB_DIR} exists"
