@@ -32,7 +32,7 @@ printf "# ${TODAY}\n\n"
 echo "PCB_NAME=${1}"
 cat <<'END_CAT'
 
-GIT_DIR=.git
+GIT_DIR=../.git
 GIT_DIR_EXISTS=$(shell if [ -d $(GIT_DIR) ]; then echo 1; else echo 0; fi;)
 GIT_BIN=$(shell which git)
 GIT_BRANCH=UNKNOWN_BRANCH
@@ -136,7 +136,7 @@ echo:
 	@echo PCB_DESIGN_FILE   = $(PCB_DESIGN_FILE)
 	@echo SCH_DESIGN_FILE   = $(SCH_DESIGN_FILE)
 	@echo SCH_PDF_FIILE     = $(SCH_PDF_FILE)
-
+	@echo GIT_DIR_EXISTS    = $(GIT_DIR_EXISTS)
 
 bom: $(BOM_DIR)
 	kicad-cli sch export bom --fields 'Reference,$${QUANTITY},MPN,Manufacturer,Footprint,Value,Alternate PN' --output $(BOM_CSV_FILE) --exclude-dnp --group-by Footprint,Value,MPN $(SCH_DESIGN_FILE)
