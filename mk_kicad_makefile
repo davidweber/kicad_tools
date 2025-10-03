@@ -60,16 +60,16 @@ ARCHIVE_DIR=$(OUTPUT_DIR)/DESIGN_ARCHIVE
 DATE_TIME=$(shell date +%Y%m%d)
 RELEASES_VER=$(PCB_NAME)-$(GIT_BRANCH)
 PCB_VER=$(PCB_NAME)-$(GIT_BRANCH)
-BOM_CSV_FILE=$(BOM_DIR)/$(PCB_NAME)-BOM.csv
-BOM_XLSX_FILE=$(BOM_DIR)/$(PCB_NAME)-BOM.xlsx
+BOM_CSV_FILE=$(BOM_DIR)/$(PCB_VER)-BOM.csv
+BOM_XLSX_FILE=$(BOM_DIR)/$(PCB_VER)-BOM.xlsx
 FAB_ZIP_FILE=$(FAB_DIR)/$(PCB_VER)-$(DATE_TIME)-FAB.zip
 FAB_TAR_FILE=$(FAB_DIR)/$(PCB_VER)-$(DATE_TIME)-FAB.tar.gz
 OUTPUT_TAR_FILE=$(RELEASES_DIR)/$(PCB_VER)-$(DATE_TIME)-ALL.tar.gz
 OUTPUT_ZIP_FILE=$(RELEASES_DIR)/$(PCB_VER)-$(DATE_TIME)-ALL.zip
-POS_FILE_ASCII_IN=$(CPL_DIR)/$(PCB_NAME)-smt-pick-place-pos-in.txt
-POS_FILE_ASCII_MM=$(CPL_DIR)/$(PCB_NAME)-smt-pick-place-pos-mm.txt
-POS_FILE_CSV_IN=$(CPL_DIR)/$(PCB_NAME)-smt-pick-place-pos-in.csv
-POS_FILE_CSV_MM=$(CPL_DIR)/$(PCB_NAME)-smt-pick-place-pos-mm.csv
+POS_FILE_ASCII_IN=$(CPL_DIR)/$(PCB_VER)-smt-pick-place-pos-in.txt
+POS_FILE_ASCII_MM=$(CPL_DIR)/$(PCB_VER)-smt-pick-place-pos-mm.txt
+POS_FILE_CSV_IN=$(CPL_DIR)/$(PCB_VER)-smt-pick-place-pos-in.csv
+POS_FILE_CSV_MM=$(CPL_DIR)/$(PCB_VER)-smt-pick-place-pos-mm.csv
 PCB_DESIGN_FILE=$(PCB_NAME).kicad_pcb
 SCH_DESIGN_FILE=$(PCB_NAME).kicad_sch
 SCH_PDF_FILE=$(SCH_DIR)/$(PCB_VER)-$(DATE_TIME)-SCH.pdf
@@ -144,6 +144,7 @@ bom: $(BOM_DIR)
 
 gerbers: $(GERBER_DIR)
 	kicad-cli pcb export gerbers --board-plot-params --output $(GERBER_DIR) $(PCB_DESIGN_FILE)
+	@find $(GERBER_DIR) -type f -name '*PCB-09*' -exec sh -c 'mv "$$1" "$$(echo "$$1" | sed 's/$(PCB_NAME)/$(PCB_VER)/')"' _ {} \;
 
 pos: $(CPL_DIR)
 	kicad-cli pcb export pos --exclude-dnp --smd-only --format ascii --units in $(PCB_DESIGN_FILE) --output $(POS_FILE_ASCII_IN)
@@ -162,9 +163,10 @@ sch_pdf: $(SCH_DIR)
 
 drill: $(DRILL_DIR)
 	kicad-cli pcb export drill --output $(DRILL_DIR)/ $(PCB_DESIGN_FILE)
+	@mv "$(DRILL_DIR)/$(PCB_NAME).drl" "$(DRILL_DIR)/$(PCB_VER).drl"
 
 step: $(STEP_DIR)
-	kicad-cli pcb export step --force --drill-origin --no-unspecified --subst-models --output $(STEP_DIR)/$(PCB_NAME).step $(PCB_DESIGN_FILE)
+	kicad-cli pcb export step --force --drill-origin --no-unspecified --subst-models --output $(STEP_DIR)/$(PCB_VER).step $(PCB_DESIGN_FILE)
 
 
 pcba zip: gerbers drill pos bom step
