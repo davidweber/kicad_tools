@@ -144,7 +144,7 @@ bom: $(BOM_DIR)
 
 gerbers: $(GERBER_DIR)
 	kicad-cli pcb export gerbers --board-plot-params --output $(GERBER_DIR) $(PCB_DESIGN_FILE)
-	@find $(GERBER_DIR) -type f -name '*PCB-09*' -exec sh -c 'mv "$$1" "$$(echo "$$1" | sed 's/$(PCB_NAME)/$(PCB_VER)/')"' _ {} \;
+	@find $(GERBER_DIR) -type f -name '*$(PCB-NAME)*' -exec sh -c 'mv "$$1" "$$(echo "$$1" | sed 's/$(PCB_NAME)/$(PCB_VER)/')"' _ {} \;
 
 pos: $(CPL_DIR)
 	kicad-cli pcb export pos --exclude-dnp --smd-only --format ascii --units in $(PCB_DESIGN_FILE) --output $(POS_FILE_ASCII_IN)
