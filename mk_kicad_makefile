@@ -57,7 +57,7 @@ SCH_DIR=$(OUTPUT_DIR)/SCH
 FAB_DIR=$(OUTPUT_DIR)/FAB
 ARCHIVE_DIR=$(OUTPUT_DIR)/DESIGN_ARCHIVE
 
-DATE_TIME=$(shell date +%Y%m%d)
+DATE_TIME=$(shell date +%Y%m%d-%H%M%S)
 RELEASES_VER=$(PCB_NAME)-$(GIT_BRANCH)
 PCB_VER=$(PCB_NAME)-$(GIT_BRANCH)
 BOM_CSV_FILE=$(BOM_DIR)/$(PCB_VER)-BOM.csv
@@ -143,6 +143,7 @@ bom: $(BOM_DIR)
 	ssconvert $(BOM_CSV_FILE) $(BOM_XLSX_FILE)
 
 gerbers: $(GERBER_DIR)
+	@rm -f $(GERBER_DIR)/*
 	kicad-cli pcb export gerbers --board-plot-params --output $(GERBER_DIR) $(PCB_DESIGN_FILE)
 	@find $(GERBER_DIR) -type f -name '*$(PCB-NAME)*' -exec sh -c 'mv "$$1" "$$(echo "$$1" | sed 's/$(PCB_NAME)/$(PCB_VER)/')"' _ {} \;
 
