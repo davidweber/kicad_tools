@@ -32,6 +32,7 @@ printf "# ${TODAY}\n\n"
 echo "PCB_NAME=${1}"
 cat <<'END_CAT'
 
+DESIGN_BACKUP_DIR=$(PCB_NAME)-backups
 GIT_DIR=../.git
 GIT_DIR_EXISTS=$(shell if [ -d $(GIT_DIR) ]; then echo 1; else echo 0; fi;)
 GIT_BIN=$(shell which git)
@@ -40,65 +41,66 @@ COMMIT_HASH=UNKNOWN_COMMIT
 
 ifeq ($(GIT_DIR_EXISTS), 1)
   ifeq ($(GIT_BIN), /usr/bin/git)
-    GIT_BRANCH="$(shell git branch | grep '*' | sed -e 's/* //g')"
+    GIT_BRANCH=$(shell git branch | grep '*' | sed -e 's/* //g')
     COMMIT_HASH=$(shell git rev-parse --short --verify HEAD)
   endif
 endif
 
+DATE_TIME:=$(shell date +%Y%m%d-%H%M%S)
 OUTPUT_DIR=../output
-RELEASES_DIR=../releases
-PCBA_DIR=$(OUTPUT_DIR)/PCBA
+BUILD_DIR=$(OUTPUT_DIR)/$(DATE_TIME)
+RELEASES_DIR=$(OUTPUT_DIR)
+PCBA_DIR=$(BUILD_DIR)/PCBA
 BOM_DIR=$(PCBA_DIR)/BOM
 CPL_DIR=$(PCBA_DIR)/CPL
 GERBER_DIR=$(PCBA_DIR)/GERBER
 DRILL_DIR=$(PCBA_DIR)/DRILL
 STEP_DIR=$(PCBA_DIR)/STEP
-SCH_DIR=$(OUTPUT_DIR)/SCH
-FAB_DIR=$(OUTPUT_DIR)/FAB
-ARCHIVE_DIR=$(OUTPUT_DIR)/DESIGN_ARCHIVE
+SCH_DIR=$(BUILD_DIR)/SCH
+FAB_DIR=$(BUILD_DIR)/FAB
+ARCHIVE_DIR=$(BUILD_DIR)/DESIGN_ARCHIVE
 
-DATE_TIME=$(shell date +%Y%m%d-%H%M%S)
 RELEASES_VER=$(PCB_NAME)-$(GIT_BRANCH)
 PCB_VER=$(PCB_NAME)-$(GIT_BRANCH)
-BOM_CSV_FILE=$(BOM_DIR)/$(PCB_VER)-BOM.csv
-BOM_XLSX_FILE=$(BOM_DIR)/$(PCB_VER)-BOM.xlsx
+BOM_CSV_FILE=$(BOM_DIR)/$(PCB_VER)-$(DATE_TIME)-BOM.csv
+BOM_XLSX_FILE=$(BOM_DIR)/$(PCB_VER)-$(DATE_TIME)-BOM.xlsx
 FAB_ZIP_FILE=$(FAB_DIR)/$(PCB_VER)-$(DATE_TIME)-FAB.zip
 FAB_TAR_FILE=$(FAB_DIR)/$(PCB_VER)-$(DATE_TIME)-FAB.tar.gz
-OUTPUT_TAR_FILE=$(RELEASES_DIR)/$(PCB_VER)-$(DATE_TIME)-ALL.tar.gz
-OUTPUT_ZIP_FILE=$(RELEASES_DIR)/$(PCB_VER)-$(DATE_TIME)-ALL.zip
-POS_FILE_ASCII_IN=$(CPL_DIR)/$(PCB_VER)-smt-pick-place-pos-in.txt
-POS_FILE_ASCII_MM=$(CPL_DIR)/$(PCB_VER)-smt-pick-place-pos-mm.txt
-POS_FILE_CSV_IN=$(CPL_DIR)/$(PCB_VER)-smt-pick-place-pos-in.csv
-POS_FILE_CSV_MM=$(CPL_DIR)/$(PCB_VER)-smt-pick-place-pos-mm.csv
+OUTPUT_TAR_FILE=$(RELEASES_DIR)/release-$(PCB_VER)-$(DATE_TIME)-ALL.tar.gz
+OUTPUT_ZIP_FILE=$(RELEASES_DIR)/release-$(PCB_VER)-$(DATE_TIME)-ALL.zip
+POS_FILE_ASCII_IN=$(CPL_DIR)/$(PCB_VER)-$(DATE_TIME)-smt-pick-place-pos-in.txt
+POS_FILE_ASCII_MM=$(CPL_DIR)/$(PCB_VER)-$(DATE_TIME)-smt-pick-place-pos-mm.txt
+POS_FILE_CSV_IN=$(CPL_DIR)/$(PCB_VER)-$(DATE_TIME)-smt-pick-place-pos-in.csv
+POS_FILE_CSV_MM=$(CPL_DIR)/$(PCB_VER)-$(DATE_TIME)-smt-pick-place-pos-mm.csv
 PCB_DESIGN_FILE=$(PCB_NAME).kicad_pcb
 SCH_DESIGN_FILE=$(PCB_NAME).kicad_sch
 SCH_PDF_FILE=$(SCH_DIR)/$(PCB_VER)-$(DATE_TIME)-SCH.pdf
 DESIGN_TAR_FILE="$(ARCHIVE_DIR)/$(PCB_VER)-$(DATE_TIME)-design.tar.gz"
 DESIGN_ZIP_FILE="$(ARCHIVE_DIR)/$(PCB_VER)-$(DATE_TIME)-design.zip"
 
-all: output bom gerbers drill step sch_pdf zip design_input_zip
+all: output pcba sch_pdf design_zip
 	tree ../
 
-$(OUTPUT_DIR):
-	@mkdir -p $(OUTPUT_DIR)
-$(PCBA_DIR):
-	@mkdir -p $(PCBA_DIR)
-$(BOM_DIR): $(PCBA_DIR)
-	@mkdir -p $(BOM_DIR)
-$(CPL_DIR): $(PCBA_DIR)
-	@mkdir -p $(CPL_DIR)
-$(GERBER_DIR): $(PCBA_DIR)
-	@mkdir -p $(GERBER_DIR)
-$(DRILL_DIR): $(PCBA_DIR)
-	@mkdir -p $(DRILL_DIR)
-$(STEP_DIR): $(PCBA_DIR)
-	@mkdir -p $(STEP_DIR)
-$(SCH_DIR):
-	@mkdir -p $(SCH_DIR)
-$(FAB_DIR):
-	@mkdir -p $(FAB_DIR)
-$(ARCHIVE_DIR):
-	@mkdir -p $(ARCHIVE_DIR)
+#$(OUTPUT_DIR):
+#	@mkdir -p $(OUTPUT_DIR)
+#$(PCBA_DIR):
+#	@mkdir -p $(PCBA_DIR)
+#$(BOM_DIR): $(PCBA_DIR)
+#	@mkdir -p $(BOM_DIR)
+#$(CPL_DIR): $(PCBA_DIR)
+#	@mkdir -p $(CPL_DIR)
+#$(GERBER_DIR): $(PCBA_DIR)
+#	@mkdir -p $(GERBER_DIR)
+#$(DRILL_DIR): $(PCBA_DIR)
+#	@mkdir -p $(DRILL_DIR)
+#$(STEP_DIR): $(PCBA_DIR)
+#	@mkdir -p $(STEP_DIR)
+#$(SCH_DIR):
+#	@mkdir -p $(SCH_DIR)
+#$(FAB_DIR):
+#	@mkdir -p $(FAB_DIR)
+#$(ARCHIVE_DIR):
+#	@mkdir -p $(ARCHIVE_DIR)
 
 output:
 	@mkdir -p $(OUTPUT_DIR)
@@ -117,9 +119,10 @@ $(RELEASES_DIR):
 
 echo:
 	@echo GIT_BIN           = $(GIT_BIN)
-	@echo PROJ_NAME         = $(PROJ_NAME)
+	@echo PCB_NAME          = $(PCB_NAME)
 	@echo OUTPUT_DIR        = $(OUTPUT_DIR)
 	@echo FAB_DIR           = $(FAB_DIR)
+	@echo STEP_DIR          = $(STEP_DIR)
 	@echo GIT_BRANCH        = $(GIT_BRANCH)
 	@echo COMMIT_HASH       = $(COMMIT_HASH)
 	@echo DATE_TIME         = $(DATE_TIME)
@@ -135,61 +138,66 @@ echo:
 	@echo POS_FILE_CSV_MM   = $(POS_FILE_CSV_MM)
 	@echo PCB_DESIGN_FILE   = $(PCB_DESIGN_FILE)
 	@echo SCH_DESIGN_FILE   = $(SCH_DESIGN_FILE)
-	@echo SCH_PDF_FIILE     = $(SCH_PDF_FILE)
+	@echo SCH_PDF_FILE      = $(SCH_PDF_FILE)
 	@echo GIT_DIR_EXISTS    = $(GIT_DIR_EXISTS)
 
 bom: $(BOM_DIR)
+	@rm -f $(BOM_DIR)/*
 	kicad-cli sch export bom --fields 'Reference,$${QUANTITY},MPN,Manufacturer,Footprint,Value,Alternate PN' --output $(BOM_CSV_FILE) --exclude-dnp --group-by Footprint,Value,MPN $(SCH_DESIGN_FILE)
 	ssconvert $(BOM_CSV_FILE) $(BOM_XLSX_FILE)
 
 gerbers: $(GERBER_DIR)
 	@rm -f $(GERBER_DIR)/*
 	kicad-cli pcb export gerbers --board-plot-params --output $(GERBER_DIR) $(PCB_DESIGN_FILE)
-	@find $(GERBER_DIR) -type f -name '*$(PCB-NAME)*' -exec sh -c 'mv "$$1" "$$(echo "$$1" | sed 's/$(PCB_NAME)/$(PCB_VER)/')"' _ {} \;
+	@find $(GERBER_DIR) -type f -name '*$(PCB-NAME)*' -exec sh -c 'mv "$$1" "$$(echo "$$1" | sed 's/$(PCB_NAME)/$(PCB_VER)-$(DATE_TIME)/')"' _ {} \;
 
 pos: $(CPL_DIR)
+	@rm -f $(CPL_DIR)/*
 	kicad-cli pcb export pos --exclude-dnp --smd-only --format ascii --units in $(PCB_DESIGN_FILE) --output $(POS_FILE_ASCII_IN)
 	kicad-cli pcb export pos --exclude-dnp --smd-only --format ascii --units mm $(PCB_DESIGN_FILE) --output $(POS_FILE_ASCII_MM)
 	kicad-cli pcb export pos --exclude-dnp --smd-only --format csv --units in   $(PCB_DESIGN_FILE) --output $(POS_FILE_CSV_IN)
 	kicad-cli pcb export pos --exclude-dnp --smd-only --format csv --units mm   $(PCB_DESIGN_FILE) --output $(POS_FILE_CSV_MM)
  
 pcb_pdf: $(OUTPUT_DIR)
-	kicad-cli pcb export pdf --layers F.Cu --output $(OUTPUT_DIR)/$(PCB_VER).pcb.front.pdf $(PCB_DESIGN_FILE)
-	kicad-cli pcb export pdf --layers B.Cu --output $(OUTPUT_DIR)/$(PCB_VER).pcb.back.pdf $(PCB_DESIGN_FILE)
+#	@rm -f $(OUTPUT_DIR)/*
+	kicad-cli pcb export pdf --layers F.Cu --output $(OUTPUT_DIR)/$(PCB_VER)-$(DATE_TIME).pcb.front.pdf $(PCB_DESIGN_FILE)
+	kicad-cli pcb export pdf --layers B.Cu --output $(OUTPUT_DIR)/$(PCB_VER)-$(DATE_TIME).pcb.back.pdf $(PCB_DESIGN_FILE)
 
 sch_pdf: $(SCH_DIR)
+	@rm -f $(SCH_DIR)/*
 	kicad-cli sch export pdf --output $(SCH_PDF_FILE) $(SCH_DESIGN_FILE)
 #	kicad-cli sch export pdf --output $(OUTPUT_DIR)/$(PROJ_NAME)-SCH.pdf $(SCH_DESIGN_FILE)
 #	find -name "*.kicad_sch" -exec kicad-cli sch export pdf --output $(OUTPUT_DIR)/{}-SCH.pdf {} \;
 
 drill: $(DRILL_DIR)
+	@rm -f $(DRILL_DIR)/*
 	kicad-cli pcb export drill --output $(DRILL_DIR)/ $(PCB_DESIGN_FILE)
-	@mv "$(DRILL_DIR)/$(PCB_NAME).drl" "$(DRILL_DIR)/$(PCB_VER).drl"
+	@mv "$(DRILL_DIR)/$(PCB_NAME).drl" "$(DRILL_DIR)/$(PCB_VER)-$(DATE_TIME).drl"
 
 step: $(STEP_DIR)
-	kicad-cli pcb export step --force --drill-origin --no-unspecified --subst-models --output $(STEP_DIR)/$(PCB_VER).step $(PCB_DESIGN_FILE)
+	@rm -f $(STEP_DIR)/*
+	kicad-cli pcb export step --force --drill-origin --no-unspecified --subst-models --output $(STEP_DIR)/$(PCB_VER)-$(DATE_TIME).step $(PCB_DESIGN_FILE)
 
-
-pcba zip: gerbers drill pos bom step
-	@echo "zipping files"
+pcba: gerbers drill pos bom step
+	@echo "### zipping files"
 	7z a $(FAB_ZIP_FILE) $(PCBA_DIR)
 	unzip -l $(FAB_ZIP_FILE)
-	tar cvzf $(FAB_TAR_FILE) -C $(OUTPUT_DIR) PCBA
+	tar cvzf $(FAB_TAR_FILE) -C $(BUILD_DIR) PCBA
 
-design_input_zip: $(ARCHIVE_DIR)
-	7z a $(DESIGN_ZIP_FILE) .
-	tar cvzf $(DESIGN_TAR_FILE) * 
+design_zip: $(ARCHIVE_DIR)
+	@echo ### Creating output zip file: $(DESIGN_ZIP_FILE)
+	7z a $(DESIGN_ZIP_FILE) . -x!$(DESIGN_BACKUP_DIR)
+	tar cvzf $(DESIGN_TAR_FILE) --exclude='$(DESIGN_BACKUP_DIR)' * 
 
-release: $(RELEASES_DIR) gerbers drill bom sch_pdf step zip pos design_input_zip
-	@echo Creating output tar file: $(OUTPUT_TAR_FILE)
-	tar cvzf $(OUTPUT_TAR_FILE) $(OUTPUT_DIR)/* > /dev/null
-	7z a $(OUTPUT_ZIP_FILE) $(OUTPUT_DIR)
+release: output pcba sch_pdf design_zip
+	@echo ### Creating output tar file: $(OUTPUT_TAR_FILE)
+	tar cvzf $(OUTPUT_TAR_FILE) $(BUILD_DIR)/* > /dev/null
+	7z a $(OUTPUT_ZIP_FILE) $(BUILD_DIR)
 	tree ../
 
 
 clean:
 	rm -rf $(OUTPUT_DIR)
-	rm -rf $(RELEASES_DIR)
 
 .PHONY: all
 END_CAT
